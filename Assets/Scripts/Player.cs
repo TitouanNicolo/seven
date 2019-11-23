@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Threading;
 
 [RequireComponent (typeof (Controller2D))]
 public class Player : MonoBehaviour {
@@ -31,15 +32,15 @@ public class Player : MonoBehaviour {
 	bool wallSliding;
 	int wallDirX;
 
-	[SerializeField] float      m_speed = 1.0f;
-    [SerializeField] float      m_jumpForce = 2.0f;
+	[SerializeField] float m_speed = 1.0f;
+    [SerializeField] float m_jumpForce = 2.0f;
 
-    private Animator            m_animator;
-    private Rigidbody2D         m_body2d;
-    private Sensor_Bandit       m_groundSensor;
-    private bool                m_grounded = false;
-    private bool                m_combatIdle = false;
-    private bool                m_isDead = false;
+    private Animator m_animator;
+    private Rigidbody2D m_body2d;
+    private Sensor_Bandit m_groundSensor;
+    private bool m_grounded = false;
+    private bool m_combatIdle = false;
+    private bool m_isDead = false;
 
     private int m_item = 0;
     private float timeLeft = 10;
@@ -47,6 +48,8 @@ public class Player : MonoBehaviour {
 
     Vector3 originalPos;
     bool timerStart = false;
+
+    private int round = 1;
 
 	void Start() {
 		controller = GetComponent<Controller2D> ();
@@ -163,16 +166,45 @@ public class Player : MonoBehaviour {
 
         if (timeLeft < 0 && !is_damaged)
         {
-        	GameObject pvDrake = GameObject.Find("HpDrake");
-        	var imagePvDrake = pvDrake.GetComponent<UnityEngine.UI.Image>();
-        	
-            imagePvDrake.fillAmount -= (float)m_item / 30;
-            timeLeft = 10;
+        	GameObject player = GameObject.Find("Player");
+	    	player.transform.position = new Vector3(22f, 10f, 0f);
 
-            GameObject player = GameObject.Find("Player");
-            player.transform.position = originalPos;
-            timerStart = false;
+	    	StartCoroutine(HitDrake());
+	        
+	        if (m_animator.GetCurrentAnimatorStateInfo(0).IsName("Attack"))
+	        {
+		        GameObject pvDrake = GameObject.Find("HpDrake");
+		    	var imagePvDrake = pvDrake.GetComponent<UnityEngine.UI.Image>();
+		    	
+		        imagePvDrake.fillAmount -= (float)m_item / 30;
+
+	            Reset(player);
+	        }
         }
+	}
+
+	public void Reset(GameObject player) {
+        player.transform.position = originalPos;
+        timerStart = false;
+        timeLeft = 10;
+		m_item = 0;
+		round++;
+
+	    StartCoroutine(ShowMessage($"Round {round}", 2));
+	}
+
+	IEnumerator HitDrake() {
+		m_animator.SetTrigger("Attack");
+		yield return new WaitForSeconds(2);
+	}
+
+	IEnumerator ShowMessage (string message, float delay) {
+		var textInfo = GameObject.Find("TextInfo");
+	    var text = textInfo.GetComponent<UnityEngine.UI.Text>();
+	    text.text = message;
+	    text.enabled = true;
+	    yield return new WaitForSeconds(delay);
+	    text.enabled = false;
 	}
 
 	public void SetDirectionalInput (Vector2 input) {
