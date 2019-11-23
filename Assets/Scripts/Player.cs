@@ -42,7 +42,8 @@ public class Player : MonoBehaviour {
     private bool                m_isDead = false;
 
     private int m_item = 0;
-    private float timeLeft = 300;
+    private float timeLeft = 10;
+    private bool is_damaged = false;
 
 	void Start() {
 		controller = GetComponent<Controller2D> ();
@@ -143,9 +144,15 @@ public class Player : MonoBehaviour {
             m_animator.SetInteger("AnimState", 0);
 
 		timeLeft -= Time.deltaTime;
-        if (timeLeft < 0)
+        if (timeLeft < 0 && !is_damaged)
         {
-            m_animator.SetTrigger("Death");
+            //m_animator.SetTrigger("Death");
+        	GameObject pvDrake = GameObject.Find("HpDrake");
+        	var imagePvDrake = pvDrake.GetComponent<UnityEngine.UI.Image>();
+        	
+            imagePvDrake.fillAmount -= (float)m_item / 30;
+            
+            is_damaged = true;
         }
 	}
 
