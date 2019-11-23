@@ -229,7 +229,10 @@ public class Player : MonoBehaviour {
         {
             Destroy(collision.gameObject);
             m_item++;
-            
+
+            var NbItems = GameObject.Find("NbItems");
+            NbItems.GetComponent<UnityEngine.UI.Text>().text = m_item.ToString();
+
             Debug.Log($"Nombre item : {m_item}" );
         }
     }
