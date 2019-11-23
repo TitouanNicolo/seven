@@ -45,6 +45,9 @@ public class Player : MonoBehaviour {
     private float timeLeft = 10;
     private bool is_damaged = false;
 
+    Vector3 originalPos;
+    bool timerStart = false;
+
 	void Start() {
 		controller = GetComponent<Controller2D> ();
 
@@ -55,6 +58,8 @@ public class Player : MonoBehaviour {
 		m_animator = GetComponent<Animator>();
         m_body2d = GetComponent<Rigidbody2D>();
         m_groundSensor = transform.Find("GroundSensor").GetComponent<Sensor_Bandit>();
+
+        originalPos = new Vector3(gameObject.transform.position.x, gameObject.transform.position.y, gameObject.transform.position.z);
 	}
 
 	void Update() {
@@ -87,10 +92,14 @@ public class Player : MonoBehaviour {
         float inputX = Input.GetAxis("Horizontal");
 
         // Swap direction of sprite depending on walk direction
-        if (inputX > 0)
+        if (inputX > 0) {
             transform.localScale = new Vector3(-2.0f, 2.0f, 2.0f);
-        else if (inputX < 0)
+            timerStart = true;
+        }
+        else if (inputX < 0) {
             transform.localScale = new Vector3(2.0f, 2.0f, 2.0f);
+            timerStart = true;
+        }
 
         // Move
         m_body2d.velocity = new Vector2(inputX * m_speed, m_body2d.velocity.y);
@@ -143,16 +152,26 @@ public class Player : MonoBehaviour {
         else
             m_animator.SetInteger("AnimState", 0);
 
-		timeLeft -= Time.deltaTime;
+        if(timerStart) {
+			timeLeft -= Time.deltaTime;
+		}
+
+		if(timeLeft > 0) {
+			var timer = GameObject.Find("Timer");
+	        timer.GetComponent<UnityEngine.UI.Text>().text = timeLeft.ToString();
+		}
+
         if (timeLeft < 0 && !is_damaged)
         {
-            //m_animator.SetTrigger("Death");
         	GameObject pvDrake = GameObject.Find("HpDrake");
         	var imagePvDrake = pvDrake.GetComponent<UnityEngine.UI.Image>();
         	
             imagePvDrake.fillAmount -= (float)m_item / 30;
-            
-            is_damaged = true;
+            timeLeft = 10;
+
+            GameObject player = GameObject.Find("Player");
+            player.transform.position = originalPos;
+            timerStart = false;
         }
 	}
 
